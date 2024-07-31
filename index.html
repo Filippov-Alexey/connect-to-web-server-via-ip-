@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connect to Server</title>
+</head>
+<body>
+    <h1>Connect to Server</h1>
+    <label for="serverIP">Server IP:</label>
+    <input type="text" id="serverIP" placeholder="Enter server IP address">
+    <button onclick="connectToServer()">Connect</button>
+    <div id="connectionStatus"></div>
+
+    <h2>Saved Servers</h2>
+    <ul id="serverList"></ul>
+
+    <script>
+        // Функция для добавления IP-адреса в список
+        function addServerToList(ip) {
+            const li = document.createElement("li");
+            const link = document.createElement("a");
+            link.href = `http://${ip}:5000`;
+            link.textContent = ip;
+            li.appendChild(link);
+            document.getElementById("serverList").appendChild(li);
+        }
+
+        // Функция для получения IP-адресов из Cookie
+        function getServersFromCookie() {
+            const cookies = document.cookie.split(";");
+            for (const cookie of cookies) {
+                const [name, value] = cookie.trim().split("=");
+                if (name === "servers") {
+                    return value.split(",");
+                }
+            }
+            return [];
+        }
+
+        // Функция для сохранения IP-адресов в Cookie
+        function saveServerToCookie(ip) {
+            const servers = getServersFromCookie();
+            servers.push(ip);
+            document.cookie = `servers=${servers.join(",")}; path=/`;
+        }
+
+        // Отображение сохраненных IP-адресов
+        const savedServers = getServersFromCookie();
+        for (const server of savedServers) {
+            addServerToList(server);
+        }
+
+        function connectToServer() {
+            const serverIP = document.getElementById("serverIP").value;
+            const url = `http://${serverIP}:5000`;
+
+            fetch(url)
+                .then(response => {
+                    if (response.ok) {
+                        document.getElementById("connectionStatus").textContent = "Connected to server!";
+                        // Сохранить IP-адрес в Cookie
+                        saveServerToCookie(serverIP);
+                        addServerToList(serverIP);
+                        // Перенаправить пользователя на страницу сервера
+                        window.location.href = url;
+                    } else {
+                        document.getElementById("connectionStatus").textContent = "Failed to connect to server.";
+                    }
+                })
+                .catch(error => {
+                    document.getElementById("connectionStatus").textContent = "Error: " + error;
+                });
+        }
+    </script>
+</body>
+</html>
